@@ -1,4 +1,4 @@
-const CACHE_NAME = 'da-linda-v5';
+const CACHE_NAME = 'da-linda-v6';
 const urlsToCache = [
   './index.html',
   './manifest.json'
