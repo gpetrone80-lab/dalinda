@@ -12,81 +12,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* Custom aesthetics */
-        :root {
-            --color-gold: #D4AF37;
-            --color-dark: #1a1a1a;
-            --color-cream: #f9f9f7;
-        }
-        body {
-            font-family: 'Lato', sans-serif;
-            background-color: var(--color-cream);
-            color: var(--color-dark);
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Playfair Display', serif;
-        }
-        
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Hide scrollbar for horizontal galleries but allow scroll */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Calendar specific styles */
-        .calendar-day {
-            transition: all 0.2s ease;
-        }
-        .calendar-day:hover:not(.disabled) {
-            transform: scale(1.05);
-            border-color: var(--color-gold);
-        }
-        
-        /* Input Styles for Admin Mode */
-        .admin-input {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px dashed var(--color-gold);
-            padding: 2px 5px;
-            border-radius: 4px;
-            width: 100%;
-            color: black;
-        }
-        .admin-input-dark {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px dashed var(--color-gold);
-            padding: 8px;
-            border-radius: 4px;
-            color: white;
-            width: 100%;
-        }
-        
-        /* Modal Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fade-in-up {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
+        :root { --color-gold: #D4AF37; --color-dark: #1a1a1a; --color-cream: #f9f9f7; }
+        body { font-family: 'Lato', sans-serif; background-color: var(--color-cream); color: var(--color-dark); }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; }
+        html { scroll-behavior: smooth; }
+        .admin-input { background: rgba(255, 255, 255, 0.9); border: 1px dashed var(--color-gold); padding: 2px 5px; border-radius: 4px; width: 100%; color: black; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
 <body>
@@ -94,31 +33,31 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        
-        // --- Icons ---
+
+        // --- CONFIGURATION ---
+        const CLOUD_CONFIG = {
+            BIN_ID: "6957232d43b1c97be9136a94", // <--- ⚠️ REPLACE THIS WITH YOUR BIN ID
+            API_URL: "https://api.jsonbin.io/v3/b"
+        };
+
+        // --- ICONS ---
         const Icons = {
             Phone: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>,
             Message: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-            Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>,
             Menu: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>,
             X: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
-            ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>,
-            ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
-            Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-            Send: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Cloud: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19c0-3.037-2.463-5.5-5.5-5.5S6.5 15.963 6.5 19"/><path d="M12 13.5V5"/><path d="m8 9 4-4 4 4"/></svg>
         };
 
-        // --- Default Data ---
+        // --- DEFAULTS ---
         const DEFAULT_SERVICES = [
             { name: "Women's Haircut", price: "$85+", desc: "Includes wash, scalp massage, and blowout." },
             { name: "Men's Haircut", price: "$55+", desc: "Precision cutting and styling." },
             { name: "Full Balayage", price: "$220+", desc: "Hand-painted highlights for a natural gradient." },
             { name: "Root Touch-Up", price: "$95+", desc: "Grey coverage or base color maintenance." },
             { name: "Gloss & Toner", price: "$65+", desc: "Add shine and correct tone between services." },
-            { name: "Keratin Treatment", price: "$300+", desc: "Smoothing therapy for frizz-free hair." },
+            { name: "Keratin Treatment", price: "$300+", desc: "Smoothing therapy for frizz-free hair." }
         ];
-
         const GALLERY_IMAGES = [
             "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&q=80&w=800",
             "https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&q=80&w=800",
@@ -128,75 +67,57 @@
             "https://images.unsplash.com/photo-1521590832169-d7b1aa1321d6?auto=format&fit=crop&q=80&w=800"
         ];
 
-        const DEFAULT_HERO_TEXT = {
-            subtitle: "Welcome to",
-            title: "da Linda",
-            tagline: "Where modern style meets timeless elegance."
+        // --- CLOUD LOGIC ---
+        const fetchCloudData = async () => {
+            try {
+                const response = await fetch(`${CLOUD_CONFIG.API_URL}/${CLOUD_CONFIG.BIN_ID}/latest`);
+                const data = await response.json();
+                return data.record;
+            } catch (error) {
+                console.error("Cloud fetch failed", error);
+                return null;
+            }
         };
 
-        // --- Components ---
+        const saveToCloud = async (apiKey, data) => {
+            try {
+                const response = await fetch(`${CLOUD_CONFIG.API_URL}/${CLOUD_CONFIG.BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
+                    body: JSON.stringify(data)
+                });
+                return response.ok;
+            } catch (error) {
+                console.error("Save failed", error);
+                return false;
+            }
+        };
 
+        // --- COMPONENTS ---
         const Navbar = () => {
             const [scrolled, setScrolled] = useState(false);
             const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 50);
                 window.addEventListener('scroll', handleScroll);
                 return () => window.removeEventListener('scroll', handleScroll);
             }, []);
-
-            const navLinks = [
-                { name: 'Home', href: '#hero' },
-                { name: 'Services', href: '#services' },
-                { name: 'Gallery', href: '#gallery' },
-                { name: 'Book Now', href: '#booking' },
-            ];
-
             return (
                 <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-3' : 'bg-transparent py-5'}`}>
                     <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-                        <div className={`font-serif text-2xl font-bold tracking-widest ${scrolled ? 'text-gray-900' : 'text-white'}`}>
-                            da Linda
-                        </div>
-
-                        {/* Desktop Menu */}
+                        <div className={`font-serif text-2xl font-bold tracking-widest ${scrolled ? 'text-gray-900' : 'text-white'}`}>da Linda</div>
                         <div className="hidden md:flex space-x-8">
-                            {navLinks.map((link) => (
-                                <a 
-                                    key={link.name} 
-                                    href={link.href}
-                                    className={`text-sm tracking-wider hover:opacity-75 transition-colors ${scrolled ? 'text-gray-800' : 'text-white'}`}
-                                >
-                                    {link.name.toUpperCase()}
-                                </a>
+                            {['Home', 'Services', 'Gallery', 'Book Now'].map((link) => (
+                                <a key={link} href={`#${link === 'Home' ? 'hero' : link === 'Book Now' ? 'booking' : link.toLowerCase()}`} className={`text-sm tracking-wider hover:opacity-75 transition-colors ${scrolled ? 'text-gray-800' : 'text-white'}`}>{link.toUpperCase()}</a>
                             ))}
                         </div>
-
-                        {/* Mobile Menu Button */}
-                        <button 
-                            className={`md:hidden ${scrolled ? 'text-gray-900' : 'text-white'}`}
-                            onClick={() => setMobileMenuOpen(true)}
-                        >
-                            <Icons.Menu />
-                        </button>
+                        <button className={`md:hidden ${scrolled ? 'text-gray-900' : 'text-white'}`} onClick={() => setMobileMenuOpen(true)}><Icons.Menu /></button>
                     </div>
-
-                    {/* Mobile Overlay */}
                     {mobileMenuOpen && (
                         <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center space-y-8 animate-fade-in">
-                            <button className="absolute top-6 right-6 text-gray-800" onClick={() => setMobileMenuOpen(false)}>
-                                <Icons.X />
-                            </button>
-                            {navLinks.map((link) => (
-                                <a 
-                                    key={link.name} 
-                                    href={link.href}
-                                    className="text-2xl font-serif text-gray-900"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    {link.name}
-                                </a>
+                            <button className="absolute top-6 right-6 text-gray-800" onClick={() => setMobileMenuOpen(false)}><Icons.X /></button>
+                            {['Home', 'Services', 'Gallery', 'Book Now'].map((link) => (
+                                <a key={link} href={`#${link === 'Home' ? 'hero' : link === 'Book Now' ? 'booking' : link.toLowerCase()}`} className="text-2xl font-serif text-gray-900" onClick={() => setMobileMenuOpen(false)}>{link}</a>
                             ))}
                         </div>
                     )}
@@ -204,192 +125,50 @@
             );
         };
 
-        const Hero = ({ isAdmin }) => {
-            const [heroImage, setHeroImage] = useState(() => {
-                return localStorage.getItem('dalinda_hero_img') || 
-                "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&q=80&w=2000";
-            });
-            const [heroText, setHeroText] = useState(() => {
-                const saved = localStorage.getItem('dalinda_hero_text');
-                return saved ? JSON.parse(saved) : DEFAULT_HERO_TEXT;
-            });
-
-            const fileInputRef = useRef(null);
-
-            const handleImageUpload = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const newImage = event.target.result;
-                        setHeroImage(newImage);
-                        localStorage.setItem('dalinda_hero_img', newImage);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-
-            const updateText = (field, value) => {
-                const newText = { ...heroText, [field]: value };
-                setHeroText(newText);
-                localStorage.setItem('dalinda_hero_text', JSON.stringify(newText));
-            };
-
-            return (
-                <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden group">
-                    {isAdmin && (
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleImageUpload} 
-                            className="hidden" 
-                            accept="image/*"
-                        />
-                    )}
-
-                    <div 
-                        className={`absolute inset-0 z-0 ${isAdmin ? 'cursor-pointer' : ''}`}
-                        onClick={() => isAdmin && fileInputRef.current.click()}
-                        title={isAdmin ? "Click to change background image" : ""}
-                    >
-                        <img 
-                            src={heroImage} 
-                            alt="Salon Interior" 
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40"></div>
-                        
-                        {isAdmin && (
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20 pointer-events-none">
-                                <span className="text-white border border-white px-6 py-2 uppercase tracking-widest text-sm flex items-center gap-2">
-                                    <Icons.Lock /> Admin: Change Image
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="relative z-10 text-center text-white px-4">
-                        {isAdmin ? (
-                            <input 
-                                value={heroText.subtitle}
-                                onChange={(e) => updateText('subtitle', e.target.value)}
-                                className="admin-input text-center text-sm md:text-base uppercase tracking-[0.3em] mb-4 opacity-90"
-                            />
-                        ) : (
-                            <h2 className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 opacity-90">{heroText.subtitle}</h2>
-                        )}
-
-                        {isAdmin ? (
-                             <input 
-                                value={heroText.title}
-                                onChange={(e) => updateText('title', e.target.value)}
-                                className="admin-input text-center text-4xl md:text-8xl font-serif mb-6 text-black"
-                            />
-                        ) : (
-                            <h1 className="text-6xl md:text-8xl font-serif mb-6">{heroText.title}</h1>
-                        )}
-                        
-                        {isAdmin ? (
-                             <input 
-                                value={heroText.tagline}
-                                onChange={(e) => updateText('tagline', e.target.value)}
-                                className="admin-input text-center text-lg md:text-xl font-light italic opacity-90 mb-10 text-black"
-                            />
-                        ) : (
-                            <p className="text-lg md:text-xl font-light italic opacity-90 mb-10">{heroText.tagline}</p>
-                        )}
-                        
-                        <a href="#services" className="inline-block border border-white px-8 py-3 text-sm tracking-widest hover:bg-white hover:text-black transition-all duration-300">
-                            EXPLORE SERVICES
-                        </a>
-                    </div>
-                </section>
-            );
-        };
-
-        const ActionButtons = ({ contactInfo }) => {
-            return (
-                <div className="sticky bottom-4 z-40 px-4 w-full md:w-auto md:fixed md:bottom-8 md:right-8">
-                    <div className="bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl p-2 flex justify-around md:flex-col md:space-y-4 md:space-x-0 md:p-3 border border-gray-100">
-                        <a href={`tel:${contactInfo.phone}`} className="flex flex-col items-center p-2 text-gray-800 hover:text-[#D4AF37] transition-colors group">
-                            <div className="bg-gray-100 p-3 rounded-full group-hover:bg-yellow-50 transition-colors">
-                                <Icons.Phone />
-                            </div>
-                            <span className="text-[10px] uppercase tracking-wider mt-1 font-bold">Call</span>
-                        </a>
-                        <a href={`sms:${contactInfo.phone}`} className="flex flex-col items-center p-2 text-gray-800 hover:text-[#D4AF37] transition-colors group">
-                            <div className="bg-gray-100 p-3 rounded-full group-hover:bg-yellow-50 transition-colors">
-                                <Icons.Message />
-                            </div>
-                            <span className="text-[10px] uppercase tracking-wider mt-1 font-bold">Text</span>
-                        </a>
-                        <a href={`mailto:${contactInfo.email}`} className="flex flex-col items-center p-2 text-gray-800 hover:text-[#D4AF37] transition-colors group">
-                            <div className="bg-gray-100 p-3 rounded-full group-hover:bg-yellow-50 transition-colors">
-                                <Icons.Mail />
-                            </div>
-                            <span className="text-[10px] uppercase tracking-wider mt-1 font-bold">Email</span>
-                        </a>
-                    </div>
+        const Hero = ({ isAdmin, heroText, setHeroText }) => (
+            <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden group">
+                <div className="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&q=80&w=2000" alt="Salon Interior" className="w-full h-full object-cover"/>
+                    <div className="absolute inset-0 bg-black/40"></div>
                 </div>
-            );
-        };
+                <div className="relative z-10 text-center text-white px-4">
+                    {isAdmin ? (
+                        <div className="flex flex-col gap-4">
+                            <input value={heroText.subtitle} onChange={(e) => setHeroText({...heroText, subtitle: e.target.value})} className="admin-input text-center text-black uppercase tracking-widest"/>
+                            <input value={heroText.title} onChange={(e) => setHeroText({...heroText, title: e.target.value})} className="admin-input text-center text-black text-4xl font-serif"/>
+                            <input value={heroText.tagline} onChange={(e) => setHeroText({...heroText, tagline: e.target.value})} className="admin-input text-center text-black italic"/>
+                        </div>
+                    ) : (
+                        <>
+                            <h2 className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 opacity-90">{heroText.subtitle || "Welcome to"}</h2>
+                            <h1 className="text-6xl md:text-8xl font-serif mb-6">{heroText.title || "da Linda"}</h1>
+                            <p className="text-lg md:text-xl font-light italic opacity-90 mb-10">{heroText.tagline}</p>
+                        </>
+                    )}
+                    <a href="#services" className="inline-block border border-white px-8 py-3 text-sm tracking-widest hover:bg-white hover:text-black transition-all duration-300 mt-8">EXPLORE SERVICES</a>
+                </div>
+            </section>
+        );
 
-        const Services = ({ isAdmin }) => {
-            const [services, setServices] = useState(() => {
-                const saved = localStorage.getItem('dalinda_services');
-                return saved ? JSON.parse(saved) : DEFAULT_SERVICES;
-            });
-
-            const updateService = (index, field, value) => {
-                const newServices = [...services];
-                newServices[index][field] = value;
-                setServices(newServices);
-                localStorage.setItem('dalinda_services', JSON.stringify(newServices));
+        const Services = ({ isAdmin, services, setServices }) => {
+            const update = (i, f, v) => {
+                const n = [...services];
+                n[i][f] = v;
+                setServices(n);
             };
-
             return (
                 <section id="services" className="py-20 bg-white">
                     <div className="max-w-4xl mx-auto px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="text-4xl font-serif text-gray-900 mb-4">Our Menu</h2>
-                            <div className="w-16 h-0.5 bg-[#D4AF37] mx-auto mb-4"></div>
-                            {isAdmin && <p className="text-red-500 font-bold text-xs uppercase">Admin Mode: Edit text & prices below</p>}
-                        </div>
-
+                        <div className="text-center mb-16"><h2 className="text-4xl font-serif text-gray-900 mb-4">Our Menu</h2><div className="w-16 h-0.5 bg-[#D4AF37] mx-auto"></div></div>
                         <div className="grid gap-8">
-                            {services.map((service, index) => (
-                                <div key={index} className="flex flex-col md:flex-row md:items-baseline justify-between border-b border-gray-100 pb-4 hover:bg-gray-50 transition-colors p-4 rounded-lg">
+                            {(services || DEFAULT_SERVICES).map((s, i) => (
+                                <div key={i} className="flex flex-col md:flex-row justify-between border-b border-gray-100 pb-4">
                                     <div className="md:w-2/3">
-                                        {isAdmin ? (
-                                            <input 
-                                                className="admin-input font-serif text-xl mb-1"
-                                                value={service.name}
-                                                onChange={(e) => updateService(index, 'name', e.target.value)}
-                                            />
-                                        ) : (
-                                            <h3 className="text-xl font-serif text-gray-900">{service.name}</h3>
-                                        )}
-                                        
-                                        {isAdmin ? (
-                                            <input 
-                                                className="admin-input text-sm text-gray-500"
-                                                value={service.desc}
-                                                onChange={(e) => updateService(index, 'desc', e.target.value)}
-                                            />
-                                        ) : (
-                                            <p className="text-gray-500 text-sm mt-1 font-light">{service.desc}</p>
-                                        )}
+                                        {isAdmin ? <input value={s.name} onChange={(e)=>update(i,'name',e.target.value)} className="admin-input font-serif text-xl mb-1"/> : <h3 className="text-xl font-serif text-gray-900">{s.name}</h3>}
+                                        {isAdmin ? <input value={s.desc} onChange={(e)=>update(i,'desc',e.target.value)} className="admin-input text-sm"/> : <p className="text-gray-500 text-sm mt-1">{s.desc}</p>}
                                     </div>
-                                    <div className="mt-2 md:mt-0 md:w-1/3 text-left md:text-right">
-                                        {isAdmin ? (
-                                            <input 
-                                                className="admin-input font-bold text-gray-800 text-right"
-                                                value={service.price}
-                                                onChange={(e) => updateService(index, 'price', e.target.value)}
-                                            />
-                                        ) : (
-                                            <span className="text-lg font-bold text-gray-800">{service.price}</span>
-                                        )}
+                                    <div className="mt-2 md:mt-0">
+                                        {isAdmin ? <input value={s.price} onChange={(e)=>update(i,'price',e.target.value)} className="admin-input font-bold text-right"/> : <span className="text-lg font-bold text-gray-800">{s.price}</span>}
                                     </div>
                                 </div>
                             ))}
@@ -399,79 +178,26 @@
             );
         };
 
-        const Gallery = ({ isAdmin }) => {
-            const [images, setImages] = useState(() => {
-                const saved = localStorage.getItem('dalinda_gallery_imgs');
-                return saved ? JSON.parse(saved) : GALLERY_IMAGES;
-            });
-            
-            const fileInputRef = useRef(null);
-            const [editIndex, setEditIndex] = useState(null);
-
-            const triggerEdit = (index) => {
-                if (isAdmin) {
-                    setEditIndex(index);
-                    fileInputRef.current.click();
+        const Gallery = ({ isAdmin, images, setImages }) => {
+            const handleImageChange = (index) => {
+                const url = prompt("Enter new image URL:");
+                if (url) {
+                    const newImages = [...images];
+                    newImages[index] = url;
+                    setImages(newImages);
                 }
             };
-
-            const handleImageUpload = (e) => {
-                const file = e.target.files[0];
-                if (file && editIndex !== null) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const newResult = event.target.result;
-                        const newImages = [...images];
-                        newImages[editIndex] = newResult;
-                        setImages(newImages);
-                        localStorage.setItem('dalinda_gallery_imgs', JSON.stringify(newImages));
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-
             return (
                 <section id="gallery" className="py-20 bg-[#f9f9f7]">
-                    {isAdmin && (
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleImageUpload} 
-                            className="hidden" 
-                            accept="image/*"
-                        />
-                    )}
-
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center mb-12">
                             <h2 className="text-4xl font-serif text-gray-900 mb-4">Portfolio</h2>
-                            {isAdmin ? (
-                                <p className="text-[#D4AF37] font-bold uppercase tracking-wide text-xs">Admin Mode: Tap image to replace</p>
-                            ) : (
-                                <p className="text-gray-500 italic">Real clients, real results.</p>
-                            )}
+                            {isAdmin && <p className="text-[#D4AF37] text-xs uppercase font-bold">Admin: Click image to change URL</p>}
                         </div>
-                        
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {images.map((src, i) => (
-                                <div 
-                                    key={i} 
-                                    className={`relative group overflow-hidden aspect-[3/4] rounded-lg ${isAdmin ? 'cursor-pointer ring-2 ring-transparent hover:ring-[#D4AF37]' : ''}`}
-                                    onClick={() => triggerEdit(i)}
-                                >
-                                    <img 
-                                        src={src} 
-                                        alt={`Gallery ${i}`} 
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
-                                    {isAdmin && (
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                                            <div className="text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all flex flex-col items-center">
-                                                <Icons.Lock size={24} />
-                                                <span className="text-xs uppercase mt-2 font-bold tracking-widest">Edit</span>
-                                            </div>
-                                        </div>
-                                    )}
+                            {(images || GALLERY_IMAGES).map((src, i) => (
+                                <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-lg group cursor-pointer" onClick={() => isAdmin && handleImageChange(i)}>
+                                    <img src={src} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy"/>
                                 </div>
                             ))}
                         </div>
@@ -480,398 +206,116 @@
             );
         };
 
-        // --- Booking System Logic ---
-        const BookingSystem = ({ isAdmin, contactInfo }) => {
-            const [currentDate, setCurrentDate] = useState(new Date());
-            const [bookings, setBookings] = useState(() => {
-                const saved = localStorage.getItem('dalinda_bookings');
-                return saved ? JSON.parse(saved) : {};
-            });
-            
-            const [selectedDate, setSelectedDate] = useState(null);
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [formData, setFormData] = useState({ name: '', phone: '', service: '' });
-            const [confirmationStep, setConfirmationStep] = useState(0); // 0 = Form, 1 = Send Options
+        const BookingSystem = ({ contactInfo }) => (
+            <section id="booking" className="py-20 bg-white text-center">
+                <h2 className="text-4xl font-serif mb-8">Book an Appointment</h2>
+                <p className="mb-8 text-gray-600">We recommend booking 2 weeks in advance.</p>
+<div className="flex flex-col md:flex-row justify-center gap-4">
+                    <a href={`tel:${contactInfo.phone}`} className="bg-black text-white px-8 py-3 uppercase tracking-widest hover:bg-[#D4AF37]">Call to Book</a>
+                    <a href={`sms:${contactInfo.phone}`} className="border border-black px-8 py-3 uppercase tracking-widest hover:bg-black hover:text-white">Text to Book</a>
+                </div>
+            </section>
+        );
 
-            const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-            const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-            
-            const formatDateKey = (day) => {
-                const y = currentDate.getFullYear();
-                const m = currentDate.getMonth() + 1;
-                return `${y}-${m.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            };
+        const ActionButtons = ({ contactInfo }) => (
+            <div className="fixed bottom-4 right-4 z-40 flex flex-col gap-2">
+                <a href={`tel:${contactInfo.phone}`} className="bg-white p-3 rounded-full shadow-lg text-black hover:text-[#D4AF37]"><Icons.Phone /></a>
+                <a href={`sms:${contactInfo.phone}`} className="bg-white p-3 rounded-full shadow-lg text-black hover:text-[#D4AF37]"><Icons.Message /></a>
+            </div>
+        );
 
-            const changeMonth = (offset) => {
-                const newDate = new Date(currentDate.setMonth(currentDate.getMonth() + offset));
-                setCurrentDate(new Date(newDate));
-            };
-
-            const handleDateClick = (day) => {
-                const dateKey = formatDateKey(day);
-                const booking = bookings[dateKey];
-
-                if (isAdmin) {
-                    const newBookings = { ...bookings };
-                    if (booking) {
-                        delete newBookings[dateKey];
-                    } else {
-                        newBookings[dateKey] = { status: 'blocked', name: 'Admin Blocked' };
-                    }
-                    setBookings(newBookings);
-                    localStorage.setItem('dalinda_bookings', JSON.stringify(newBookings));
-                } else {
-                    if (!booking) {
-                        setSelectedDate(dateKey);
-                        setIsModalOpen(true);
-                        setConfirmationStep(0);
-                        setFormData({ name: '', phone: '', service: '' });
-                    }
-                }
-            };
-
-            const submitBooking = (e) => {
-                e.preventDefault();
-                // 1. Save locally so Calendar updates
-                const newBookings = {
-                    ...bookings,
-                    [selectedDate]: {
-                        status: 'booked',
-                        name: formData.name,
-                        phone: formData.phone,
-                        service: formData.service || "Unspecified"
-                    }
-                };
-                setBookings(newBookings);
-                localStorage.setItem('dalinda_bookings', JSON.stringify(newBookings));
-                
-                // 2. Move to "Send" step
-                setConfirmationStep(1);
-            };
-
-            // Generate notification links using DYNAMIC contact info
-            const emailBody = `New Booking Request:\n\nName: ${formData.name}\nPhone: ${formData.phone}\nDate: ${selectedDate}\nService: ${formData.service}`;
-            const mailtoLink = `mailto:${contactInfo.email}?subject=Booking Request - ${selectedDate}&body=${encodeURIComponent(emailBody)}`;
-            const smsLink = `sms:${contactInfo.phone}?body=${encodeURIComponent(emailBody)}`;
-
-            const daysInMonth = getDaysInMonth(currentDate);
-            const firstDay = getFirstDayOfMonth(currentDate);
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-            return (
-                <section id="booking" className="py-20 bg-white relative">
-                    <div className="max-w-lg mx-auto px-6">
-                         <div className="text-center mb-12">
-                            <h2 className="text-4xl font-serif text-gray-900 mb-4">Availability</h2>
-                            {isAdmin ? (
-                                <div className="bg-red-50 text-red-600 border border-red-200 p-4 rounded-lg inline-block">
-                                    <p className="text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                                        <Icons.Lock size={14}/> Manager Mode Active
-                                    </p>
-                                    <p className="text-sm mt-1">Tap a date to Block/Unblock it.</p>
-                                </div>
-                            ) : (
-                                <p className="text-gray-500">Select a date to request an appointment.</p>
-                            )}
-                        </div>
-
-                        <div className="bg-white border border-gray-200 shadow-xl rounded-2xl overflow-hidden relative">
-                            {/* Calendar Header */}
-                            <div className="bg-gray-900 text-white p-6 flex justify-between items-center">
-                                <button onClick={() => changeMonth(-1)} className="hover:text-[#D4AF37]"><Icons.ChevronLeft /></button>
-                                <span className="font-serif text-xl tracking-wide">
-                                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                                </span>
-                                <button onClick={() => changeMonth(1)} className="hover:text-[#D4AF37]"><Icons.ChevronRight /></button>
-                            </div>
-
-                            {/* Calendar Grid */}
-                            <div className="p-6">
-                                <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-                                </div>
-                                <div className="grid grid-cols-7 gap-2">
-                                    {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} className="h-10"></div>)}
-                                    
-                                    {Array.from({ length: daysInMonth }).map((_, i) => {
-                                        const day = i + 1;
-                                        const dateKey = formatDateKey(day);
-                                        const booking = bookings[dateKey];
-                                        const isPast = new Date(dateKey) < new Date().setHours(0,0,0,0);
-
-                                        let baseClass = "h-10 w-10 mx-auto flex items-center justify-center rounded-full text-sm font-medium calendar-day ";
-                                        
-                                        if (isPast && !isAdmin) {
-                                            baseClass += "text-gray-300 cursor-not-allowed";
-                                        } else if (booking) {
-                                            baseClass += "bg-gray-100 text-gray-400 cursor-not-allowed line-through disabled";
-                                            if(isAdmin) baseClass += " cursor-pointer hover:bg-red-100 hover:text-red-500 ring-2 ring-red-500";
-                                        } else {
-                                            baseClass += "hover:bg-gray-900 hover:text-white cursor-pointer text-gray-700 border border-gray-100";
-                                            if (isAdmin) baseClass += " hover:bg-green-100 hover:text-green-800 hover:border-green-500";
-                                        }
-
-                                        return (
-                                            <div 
-                                                key={day} 
-                                                className={baseClass}
-                                                onClick={() => !isPast || isAdmin ? handleDateClick(day) : null}
-                                            >
-                                                {day}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Booking Modal */}
-                    {isModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-                            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md relative z-10 animate-fade-in-up">
-                                <button 
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-900"
-                                >
-                                    <Icons.X />
-                                </button>
-                                
-                                {confirmationStep === 1 ? (
-                                    <div className="text-center py-4">
-                                        <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
-                                            <Icons.Check />
-                                        </div>
-                                        <h3 className="text-2xl font-serif text-gray-900 mb-2">Saved!</h3>
-                                        <p className="text-gray-500 mb-6 text-sm">Now, tap below to send the details to the salon.</p>
-                                        
-                                        <div className="space-y-3">
-                                            <a 
-                                                href={mailtoLink}
-                                                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
-                                            >
-                                                <Icons.Mail size={18} /> Send Confirmation Email
-                                            </a>
-                                            <a 
-                                                href={smsLink}
-                                                className="w-full bg-green-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition-colors"
-                                            >
-                                                <Icons.Message size={18} /> Send Confirmation Text
-                                            </a>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={submitBooking}>
-                                        <h3 className="text-2xl font-serif text-gray-900 mb-6">Book Appointment</h3>
-                                        <p className="text-sm text-gray-500 mb-6">Requesting for: <span className="font-bold text-gray-900">{selectedDate}</span></p>
-                                        
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Your Name</label>
-                                                <input 
-                                                    required 
-                                                    type="text" 
-                                                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:border-[#D4AF37]"
-                                                    value={formData.name}
-                                                    onChange={e => setFormData({...formData, name: e.target.value})}
-                                                    placeholder="Enter your full name"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Phone Number</label>
-                                                <input 
-                                                    required 
-                                                    type="tel" 
-                                                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:border-[#D4AF37]"
-                                                    value={formData.phone}
-                                                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                                                    placeholder="Enter your phone number"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Service</label>
-                                                
-                                                {/* Datalist allows selecting OR typing */}
-                                                <input 
-                                                    list="service-options" 
-                                                    name="service" 
-                                                    required
-                                                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:border-[#D4AF37]"
-                                                    value={formData.service}
-                                                    onChange={e => setFormData({...formData, service: e.target.value})}
-                                                    placeholder="Select or Type a Service..."
-                                                />
-                                                <datalist id="service-options">
-                                                    {DEFAULT_SERVICES.map(s => <option key={s.name} value={s.name} />)}
-                                                </datalist>
-                                                <p className="text-[10px] text-gray-400 mt-1">Type your own if not listed.</p>
-                                            </div>
-                                            
-                                            <button 
-                                                type="submit" 
-                                                className="w-full bg-gray-900 text-white py-4 font-bold tracking-widest hover:bg-[#D4AF37] transition-colors mt-4"
-                                            >
-                                                CONFIRM BOOKING
-                                            </button>
-                                        </div>
-                                    </form>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </section>
-            );
-        };
-
-        const Footer = ({ onLogin, isAdmin, contactInfo, setContactInfo }) => {
-            const [socialLinks, setSocialLinks] = useState(() => {
-                const saved = localStorage.getItem('dalinda_socials');
-                return saved ? JSON.parse(saved) : { instagram: '#', facebook: '#' };
-            });
-
-            const updateSocial = (platform, url) => {
-                const newLinks = { ...socialLinks, [platform]: url };
-                setSocialLinks(newLinks);
-                localStorage.setItem('dalinda_socials', JSON.stringify(newLinks));
-            };
-
-            const updateContact = (field, value) => {
-                const newContact = { ...contactInfo, [field]: value };
-                setContactInfo(newContact);
-                localStorage.setItem('dalinda_contact', JSON.stringify(newContact));
-            };
-
-            return (
-                <footer className="bg-gray-900 text-white py-12 text-center">
-                    <h2 className="font-serif text-3xl mb-6">da Linda</h2>
-                    <p className="text-gray-400 mb-8 font-light text-sm tracking-wide">
-                        2569 Countryside Blvd. Suite 20 Clearwater, FL 33761
-                    </p>
-                    
-                    {/* Social Media Section - Editable in Admin Mode */}
-                    {isAdmin ? (
-                        <div className="flex flex-col items-center gap-2 mb-8 border-b border-gray-800 pb-8 mx-auto w-64">
-                            <h4 className="text-[#D4AF37] text-xs font-bold uppercase mb-2">Edit Social Links</h4>
-                            <input 
-                                value={socialLinks.instagram} 
-                                onChange={(e) => updateSocial('instagram', e.target.value)}
-                                placeholder="https://www.instagram.com/dalinda_hairstylist_fl?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                                className="admin-input-dark text-xs text-center"
-                            />
-                            <input 
-                                value={socialLinks.facebook} 
-                                onChange={(e) => updateSocial('facebook', e.target.value)}
-                                placeholder="Paste Facebook URL here"
-                                className="admin-input-dark text-xs text-center"
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex justify-center space-x-6 mb-8 text-sm text-gray-400">
-                            <a href={socialLinks.instagram} target="_blank" className="hover:text-white transition-colors">Instagram</a>
-                            <a href={socialLinks.facebook} target="_blank" className="hover:text-white transition-colors">Facebook</a>
-                        </div>
-                    )}
-
-                    {/* Admin Contact Details Editing */}
+        const Footer = ({ onLogin, isAdmin, isSaving, onSave }) => (
+            <footer className="bg-gray-900 text-white py-12 text-center">
+                <h2 className="font-serif text-3xl mb-6">da Linda</h2>
+                <div className="flex justify-center gap-4 mb-8">
+                    <button onClick={onLogin} className="text-xs uppercase tracking-widest border px-3 py-1 rounded hover:bg-white hover:text-black">{isAdmin ? "Log Out" : "Admin Login"}</button>
                     {isAdmin && (
-                        <div className="flex flex-col items-center gap-2 mb-8 mx-auto w-64">
-                            <h4 className="text-[#D4AF37] text-xs font-bold uppercase mb-2">Admin: Contact Details</h4>
-                            <p className="text-[10px] text-gray-500 mb-1">Updates Floating Buttons & Booking System</p>
-                            
-                            <label className="text-[10px] text-gray-500 uppercase self-start">Salon Phone</label>
-                            <input 
-                                value={contactInfo.phone} 
-                                onChange={(e) => updateContact('phone', e.target.value)}
-                                placeholder="+1..."
-                                className="admin-input-dark text-xs text-center"
-                            />
-                            
-                            <label className="text-[10px] text-gray-500 uppercase self-start mt-2">Salon Email</label>
-                            <input 
-                                value={contactInfo.email} 
-                                onChange={(e) => updateContact('email', e.target.value)}
-                                placeholder="lpiranaj@gmail.com"
-                                className="admin-input-dark text-xs text-center"
-                            />
-                        </div>
+                        <button onClick={onSave} disabled={isSaving} className="text-xs uppercase tracking-widest bg-[#D4AF37] text-black px-4 py-1 rounded font-bold hover:bg-white flex items-center gap-2">{isSaving ? "Publishing..." : <>Publish Changes <Icons.Cloud/></>}</button>
                     )}
-
-                    <div className="flex flex-col items-center space-y-4">
-                        <p className="text-gray-600 text-xs">© 2026 da Linda Salon. All rights reserved.</p>
-                        <button 
-                            onClick={onLogin} 
-                            className="text-[10px] uppercase tracking-widest text-gray-700 hover:text-white transition-colors border border-gray-800 hover:border-white px-3 py-1 rounded"
-                        >
-                            {isAdmin ? "Log Out Admin" : "Admin Login"}
-                        </button>
-                    </div>
-                </footer>
-            );
-        };
+                </div>
+                <p className="text-gray-600 text-xs">© 2026 da Linda Salon</p>
+            </footer>
+        );
 
         const App = () => {
             const [isAdmin, setIsAdmin] = useState(false);
+            const [isSaving, setIsSaving] = useState(false);
+            const [apiKey, setApiKey] = useState("");
             
-            // Global State for Contact Info (so it can be used in ActionButtons AND BookingSystem)
-            const [contactInfo, setContactInfo] = useState(() => {
-                const saved = localStorage.getItem('dalinda_contact');
-                return saved ? JSON.parse(saved) : {
-                    phone: '+17278779909',
-                    email: 'lpiranaj@gmail.com'
+            // App Content State
+            const [heroText, setHeroText] = useState({});
+            const [services, setServices] = useState(DEFAULT_SERVICES);
+            const [images, setImages] = useState(GALLERY_IMAGES);
+            const [contactInfo, setContactInfo] = useState({ phone: '+17278779909', email: 'lpiranaj@gmail.com' });
+
+            useEffect(() => {
+                const load = async () => {
+                    const cloudData = await fetchCloudData();
+                    if (cloudData) {
+                        if (cloudData.hero) setHeroText(cloudData.hero);
+                        if (cloudData.services) setServices(cloudData.services);
+                        if (cloudData.gallery) setImages(cloudData.gallery);
+                        if (cloudData.contact) setContactInfo(cloudData.contact);
+                        
+                        // Local Backup
+                        localStorage.setItem('dalinda_hero_text', JSON.stringify(cloudData.hero));
+                        localStorage.setItem('dalinda_services', JSON.stringify(cloudData.services));
+                        localStorage.setItem('dalinda_gallery_imgs', JSON.stringify(cloudData.gallery));
+                        localStorage.setItem('dalinda_contact', JSON.stringify(cloudData.contact));
+                    }
                 };
-            });
+                load();
+            }, []);
+
+            const handleSave = async () => {
+                if (!apiKey) return alert("Error: No API Key found. Relogin.");
+                setIsSaving(true);
+                
+                const payload = { hero: heroText, services, gallery: images, contact: contactInfo };
+                
+                // Save locally first
+                localStorage.setItem('dalinda_hero_text', JSON.stringify(heroText));
+                localStorage.setItem('dalinda_services', JSON.stringify(services));
+                localStorage.setItem('dalinda_gallery_imgs', JSON.stringify(images));
+                localStorage.setItem('dalinda_contact', JSON.stringify(contactInfo));
+
+                const success = await saveToCloud(apiKey, payload);
+                if (success) alert("✅ Live site updated successfully!");
+                else alert("❌ Update failed. Check internet connection.");
+                setIsSaving(false);
+            };
 
             const handleLogin = () => {
                 if (isAdmin) {
                     setIsAdmin(false);
-                    alert("Logged out of Admin Mode");
+                    setApiKey("");
                 } else {
-                    const password = prompt("Please enter Admin Password:");
-                    if (password === "123") {
+                    const key = prompt("Enter your JSONBin Master Key to edit:");
+                    if (key && key.length > 10) {
+                        setApiKey(key);
                         setIsAdmin(true);
-                    } else if (password !== null) {
-                        alert("Incorrect Password");
+                    } else if (key) {
+                        alert("Invalid Key");
                     }
                 }
             };
 
             return (
-                <div className="min-h-screen relative">
-                    {isAdmin && (
-                        <div className="fixed top-0 left-0 w-full bg-[#D4AF37] text-black text-center text-xs font-bold uppercase tracking-widest py-1 z-[60]">
-                            Admin Mode Active - You can edit content
-                        </div>
-                    )}
-                    
+                <div className="min-h-screen relative bg-[#f9f9f7] text-[#1a1a1a]">
+                    {isAdmin && <div className="fixed top-0 w-full bg-[#D4AF37] text-black text-center text-xs font-bold py-1 z-[60]">ADMIN MODE: Click 'Publish Changes' in Footer to save to live site.</div>}
                     <Navbar />
-                    <Hero isAdmin={isAdmin} />
-                    <Services isAdmin={isAdmin} />
-                    <Gallery isAdmin={isAdmin} />
-                    <BookingSystem isAdmin={isAdmin} contactInfo={contactInfo} />
-                    <Footer 
-                        onLogin={handleLogin} 
-                        isAdmin={isAdmin} 
-                        contactInfo={contactInfo} 
-                        setContactInfo={setContactInfo} 
-                    />
+                    <Hero isAdmin={isAdmin} heroText={heroText} setHeroText={setHeroText} />
+                    <Services isAdmin={isAdmin} services={services} setServices={setServices} />
+                    <Gallery isAdmin={isAdmin} images={images} setImages={setImages} />
+                    <BookingSystem contactInfo={contactInfo} />
                     <ActionButtons contactInfo={contactInfo} />
+                    <Footer onLogin={handleLogin} isAdmin={isAdmin} isSaving={isSaving} onSave={handleSave} />
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
-                    console.log('SW registered: ', registration);
-                }).catch(registrationError => {
-                    console.log('SW registration failed: ', registrationError);
-                });
-            });
-        }
     </script>
 </body>
 </html>
