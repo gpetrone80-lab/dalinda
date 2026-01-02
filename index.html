@@ -27,10 +27,14 @@
         
         /* Calendar Styles */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .calendar-day:hover:not(.empty) { background-color: #e5e7eb; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; transition: 0.2s; position: relative; }
+        .calendar-day:hover:not(.empty):not(.blocked) { background-color: #e5e7eb; }
         .calendar-day.selected { background-color: var(--color-gold); color: white; font-weight: bold; }
         .calendar-day.empty { background: transparent; cursor: default; }
+        
+        /* Blocked Date Style */
+        .calendar-day.blocked { background-color: #f3f4f6; color: #d1d5db; text-decoration: line-through; cursor: not-allowed; }
+        .calendar-day.blocked.admin-view { cursor: pointer; border: 1px dashed red; } /* Admin can still click blocked dates */
 
         /* Carousel Styles */
         .carousel-track { transition: transform 0.5s ease-in-out; }
@@ -59,7 +63,8 @@
             ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
             Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
             Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
-            Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
+            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         };
 
         // --- DEFAULTS ---
@@ -121,7 +126,12 @@
             }
         };
 
-        // --- HELPER: CALENDAR ---
+        // --- HELPER: DATE FORMATTING ---
+        // Returns "YYYY-MM-DD" for easy comparison
+        const getDateStr = (date) => {
+            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+        };
+
         const getDaysInMonth = (year, month) => {
             const date = new Date(year, month, 1);
             const days = [];
@@ -258,23 +268,18 @@
 
         const GalleryCarousel = ({ isAdmin, images, setImages }) => {
             const [current, setCurrent] = useState(0);
-
-            // Safety check
             const safeImages = (images && images.length > 0) ? images : DEFAULT_GALLERY;
-
             const next = () => setCurrent((curr) => (curr + 1) % safeImages.length);
             const prev = () => setCurrent((curr) => (curr - 1 + safeImages.length) % safeImages.length);
 
-            // Admin Actions
             const addImage = () => {
                 const url = prompt("Paste new Image URL (e.g., from an image host):");
                 if (url) {
                     const newImages = [...safeImages, url];
                     setImages(newImages);
-                    setCurrent(newImages.length - 1); // Jump to new image
+                    setCurrent(newImages.length - 1);
                 }
             };
-
             const editImage = () => {
                 const url = prompt("Edit this Image URL:", safeImages[current]);
                 if (url) {
@@ -283,7 +288,6 @@
                     setImages(newImages);
                 }
             };
-
             const deleteImage = () => {
                 if (safeImages.length <= 1) return alert("Cannot delete the last image.");
                 if (confirm("Delete this photo?")) {
@@ -300,45 +304,18 @@
                             <h2 className="text-4xl font-serif text-gray-900 mb-4">Portfolio</h2>
                             <div className="w-16 h-0.5 bg-[#D4AF37] mx-auto"></div>
                         </div>
-
-                        {/* Carousel Container */}
                         <div className="max-w-2xl mx-auto relative group">
-                            
-                            {/* Main Image */}
                             <div className="aspect-[3/4] md:aspect-[4/3] relative overflow-hidden rounded-lg shadow-xl bg-gray-200">
-                                <img 
-                                    src={safeImages[current]} 
-                                    className="w-full h-full object-cover transition-opacity duration-300"
-                                    key={current} // Forces re-render on change for animation
-                                    onError={(e) => e.target.src='https://placehold.co/600x800?text=Invalid+URL'}
-                                />
-                                {/* Overlay Gradient */}
+                                <img src={safeImages[current]} className="w-full h-full object-cover transition-opacity duration-300" key={current} onError={(e) => e.target.src='https://placehold.co/600x800?text=Invalid+URL'}/>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
-
-                            {/* Controls */}
                             <button onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-[#D4AF37] hover:text-white transition shadow-lg"><Icons.ChevronLeft /></button>
                             <button onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-[#D4AF37] hover:text-white transition shadow-lg"><Icons.ChevronRight /></button>
-
-                            {/* Indicators */}
-                            <div className="flex justify-center mt-4 gap-2">
-                                {safeImages.map((_, i) => (
-                                    <button key={i} onClick={() => setCurrent(i)} className={`w-2 h-2 rounded-full transition-all ${i === current ? 'bg-[#D4AF37] w-6' : 'bg-gray-300'}`}></button>
-                                ))}
-                            </div>
-
-                            {/* ADMIN TOOLBAR */}
                             {isAdmin && (
                                 <div className="mt-6 flex justify-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                    <button onClick={addImage} className="flex items-center gap-2 px-4 py-2 bg-black text-white text-xs uppercase tracking-wider rounded hover:bg-[#D4AF37]">
-                                        <Icons.Plus/> Add Photo
-                                    </button>
-                                    <button onClick={editImage} className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-xs uppercase tracking-wider rounded hover:bg-gray-100">
-                                        <Icons.Edit/> Edit URL
-                                    </button>
-                                    <button onClick={deleteImage} className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 text-xs uppercase tracking-wider rounded hover:bg-red-50">
-                                        <Icons.Trash/> Delete
-                                    </button>
+                                    <button onClick={addImage} className="flex items-center gap-2 px-4 py-2 bg-black text-white text-xs uppercase tracking-wider rounded hover:bg-[#D4AF37]"><Icons.Plus/> Add</button>
+                                    <button onClick={editImage} className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-xs uppercase tracking-wider rounded hover:bg-gray-100"><Icons.Edit/> Edit</button>
+                                    <button onClick={deleteImage} className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 text-xs uppercase tracking-wider rounded hover:bg-red-50"><Icons.Trash/> Del</button>
                                 </div>
                             )}
                         </div>
@@ -347,7 +324,7 @@
             );
         };
 
-        const BookingCalendar = ({ contactInfo }) => {
+        const BookingCalendar = ({ contactInfo, blockedDates, setBlockedDates, isAdmin }) => {
             const today = new Date();
             const [currentDate, setCurrentDate] = useState(today);
             const [selectedDate, setSelectedDate] = useState(null);
@@ -355,20 +332,30 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             const daysInMonth = getDaysInMonth(year, month);
-            
             const firstDayIndex = new Date(year, month, 1).getDay();
             const emptySlots = Array(firstDayIndex).fill(null);
-            
             const timeSlots = ["10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:30 PM"];
 
             const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
             const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+            const toggleBlockDate = (date) => {
+                const dateStr = getDateStr(date);
+                if (blockedDates.includes(dateStr)) {
+                    setBlockedDates(blockedDates.filter(d => d !== dateStr));
+                } else {
+                    setBlockedDates([...blockedDates, dateStr]);
+                }
+            };
 
             const handleBooking = (time) => {
                 const dateStr = selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                 const message = `Hi! I would like to request an appointment on ${dateStr} at ${time}.`;
                 window.location.href = `sms:${contactInfo.phone}?body=${encodeURIComponent(message)}`;
             };
+
+            // Determine if selected date is blocked
+            const isSelectedBlocked = selectedDate && blockedDates.includes(getDateStr(selectedDate));
 
             return (
                 <section id="booking" className="py-20 bg-white">
@@ -389,13 +376,25 @@
                             <div className="grid grid-cols-7 gap-2">
                                 {emptySlots.map((_, i) => <div key={`empty-${i}`} className="calendar-day empty"></div>)}
                                 {daysInMonth.map((date, i) => {
+                                    const dateStr = getDateStr(date);
+                                    const isBlocked = blockedDates.includes(dateStr);
                                     const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
                                     const isPast = date < new Date().setHours(0,0,0,0);
+                                    
+                                    // Logic: Admins can click blocked dates (to unblock them). Users cannot.
+                                    const isClickable = !isPast && (isAdmin || !isBlocked);
+
                                     return (
                                         <div 
                                             key={i} 
-                                            onClick={() => !isPast && setSelectedDate(date)}
-                                            className={`calendar-day text-sm ${isSelected ? 'selected' : ''} ${isPast ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                            onClick={() => isClickable && setSelectedDate(date)}
+                                            className={`
+                                                calendar-day text-sm 
+                                                ${isSelected ? 'selected' : ''} 
+                                                ${isBlocked ? 'blocked' : ''}
+                                                ${isBlocked && isAdmin ? 'admin-view' : ''}
+                                                ${!isClickable ? 'opacity-30 cursor-not-allowed' : ''}
+                                            `}
                                         >
                                             {date.getDate()}
                                         </div>
@@ -405,15 +404,38 @@
 
                             {selectedDate && (
                                 <div className="mt-8 animate-fade-in text-left">
-                                    <h4 className="font-serif text-md mb-3 text-[#D4AF37]">Available Times for {selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {timeSlots.map(time => (
-                                            <button key={time} onClick={() => handleBooking(time)} className="border border-gray-200 py-2 text-sm hover:bg-black hover:text-white transition-colors rounded">
-                                                {time}
+                                    <h4 className="font-serif text-md mb-3 text-[#D4AF37]">
+                                        {selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                        {isSelectedBlocked && <span className="text-red-500 ml-2 text-xs font-bold uppercase">(Unavailable)</span>}
+                                    </h4>
+                                    
+                                    {/* ADMIN CONTROLS */}
+                                    {isAdmin && (
+                                        <div className="mb-4">
+                                            <button 
+                                                onClick={() => toggleBlockDate(selectedDate)} 
+                                                className={`w-full py-2 rounded font-bold uppercase text-xs tracking-widest ${isSelectedBlocked ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}
+                                            >
+                                                {isSelectedBlocked ? "✅ Unblock Date" : "🚫 Block This Date"}
                                             </button>
-                                        ))}
-                                    </div>
-                                    <p className="text-[10px] text-gray-400 mt-4 text-center">Clicking a time will open your messages to confirm.</p>
+                                        </div>
+                                    )}
+
+                                    {/* TIME SLOTS (Only show if not blocked OR if admin wants to see them anyway) */}
+                                    {!isSelectedBlocked ? (
+                                        <>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {timeSlots.map(time => (
+                                                    <button key={time} onClick={() => handleBooking(time)} className="border border-gray-200 py-2 text-sm hover:bg-black hover:text-white transition-colors rounded">
+                                                        {time}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mt-4 text-center">Clicking a time will open your messages to confirm.</p>
+                                        </>
+                                    ) : (
+                                        !isAdmin && <p className="text-sm text-gray-400 text-center italic">No appointments available on this day.</p>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -456,6 +478,8 @@
             const [services, setServices] = useState(DEFAULT_SERVICES);
             const [images, setImages] = useState(DEFAULT_GALLERY);
             const [contactInfo, setContactInfo] = useState({ phone: '+17278779909', email: 'lpiranaj@gmail.com' });
+            // NEW: Blocked Dates State
+            const [blockedDates, setBlockedDates] = useState([]);
 
             useEffect(() => {
                 const load = async () => {
@@ -465,7 +489,10 @@
                         if (cloudData.services) setServices(cloudData.services);
                         if (cloudData.gallery) setImages(cloudData.gallery);
                         if (cloudData.contact) setContactInfo(cloudData.contact);
+                        // Load Blocked Dates
+                        if (cloudData.blockedDates) setBlockedDates(cloudData.blockedDates);
                         
+                        // Sync Local
                         localStorage.setItem('dalinda_hero_text', JSON.stringify(cloudData.hero));
                         localStorage.setItem('dalinda_services', JSON.stringify(cloudData.services));
                         localStorage.setItem('dalinda_gallery_imgs', JSON.stringify(cloudData.gallery));
@@ -479,7 +506,14 @@
                 if (!apiKey) return alert("Error: No API Key found. Relogin.");
                 setIsSaving(true);
                 
-                const payload = { hero: heroText, services, gallery: images, contact: contactInfo };
+                // Save everything, including blocked dates
+                const payload = { 
+                    hero: heroText, 
+                    services, 
+                    gallery: images, 
+                    contact: contactInfo,
+                    blockedDates: blockedDates // <--- Added to payload
+                };
                 
                 localStorage.setItem('dalinda_hero_text', JSON.stringify(heroText));
                 localStorage.setItem('dalinda_services', JSON.stringify(services));
@@ -514,15 +548,17 @@
                     <Hero isAdmin={isAdmin} heroText={heroText} setHeroText={setHeroText} />
                     <Services isAdmin={isAdmin} services={services} setServices={setServices} />
                     <GalleryCarousel isAdmin={isAdmin} images={images} setImages={setImages} />
-                    <BookingCalendar contactInfo={contactInfo} />
+                    {/* Pass blocked dates and admin status to calendar */}
+                    <BookingCalendar 
+                        contactInfo={contactInfo} 
+                        blockedDates={blockedDates} 
+                        setBlockedDates={setBlockedDates}
+                        isAdmin={isAdmin} 
+                    />
                     <ActionButtons contactInfo={contactInfo} />
                     <Footer onLogin={handleLogin} isAdmin={isAdmin} isSaving={isSaving} onSave={handleSave} />
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        const root =
